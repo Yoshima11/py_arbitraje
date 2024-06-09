@@ -72,6 +72,15 @@ def main(page: ft.Page):
         print('DICP/DIP0', ratios_dicp_dip0)
         ratios_parp_pap0 = calc_ratios(h_cot['PARP'], h_cot['PAP0'])
         print('PARP/PAP0', ratios_parp_pap0)
+        al30_gd30 = {}
+        al30_gd30['promedio'] = calc_promedio(ratios_al30_gd30)
+        al30_gd30['desv_est'] = desviacion_estandar(ratios_al30_gd30)
+        print('al30/gd30: prom-2desv * prom * prom+2desv', al30_gd30['promedio'] - (al30_gd30['desv_est'] * 2), al30_gd30['promedio'], al30_gd30['promedio'] + (al30_gd30['desv_est'] * 2))
+        al35_gd35 = {}
+        ae38_gd38 = {}
+        tx26_tx28 = {}
+        dicp_dip0 = {}
+        parp_pap0 = {}
 
     def calc_promedio(valores: list):
         suma = 0
