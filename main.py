@@ -1,6 +1,7 @@
 import threading
 from datetime import date
 from datetime import timedelta
+from datetime import datetime
 from math import sqrt
 import flet as ft
 from iol import ApiIOL
@@ -34,7 +35,8 @@ def main(page: ft.Page):
         else:
             print(iol.access_token)
             login_off()
-            ratios_hist(simbolos)
+            datos = ratios_hist(simbolos)
+            auto_refrescar(datos)
 
     def login_off():
         user.disabled = True
@@ -45,8 +47,18 @@ def main(page: ft.Page):
         iniciar_sesion.disabled = True
         page.update(user, password, login_error, iniciar_sesion)
 
-    def auto_refrescar(simbolos: list):
+    def auto_refrescar(datos: list):
         while True:
+            for i in range(0, len(datos)):
+                print(datos[i]['simbolo_1'], datos[i]['simbolo_2'])
+                ratio_actual = (iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')['ultimoPrecio'] /
+                                iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')['ultimoPrecio'])
+                print(ratio_actual)
+                datos[i]['ratio_actual'] = ratio_actual
+                print(datos)
+            hora_actual.value = f'Ultima actualización: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}'
+            page.update(hora_actual)
+            agregar_fila(datos)
             event.wait(60)
             if event.is_set():
                 break
@@ -68,7 +80,9 @@ def main(page: ft.Page):
             valor_1_20 = h_cot[simbolos[i]][0:20]
             valor_2_20 = h_cot[simbolos[i + 1]][0:20]
             ratios_20 = calc_ratio_hist(valor_1_20, valor_2_20)
-            ratios.append({'nombre': f'{simbolos[i]}/{simbolos[i + 1]}',
+            ratios.append({'simbolo_1': simbolos[i],
+                           'simbolo_2': simbolos[i+1],
+                           'nombre': f'{simbolos[i]}/{simbolos[i + 1]}',
                            'prom_200': calc_promedio(ratios_200),
                            'desv_est_200': desviacion_estandar(ratios_200),
                            'prom_20': calc_promedio(ratios_20),
@@ -76,6 +90,7 @@ def main(page: ft.Page):
                            })
         for i in range(0, len(ratios)):
             print(ratios[i])
+        return ratios
 
     def calc_promedio(valores: list):
         suma = 0
@@ -103,16 +118,20 @@ def main(page: ft.Page):
     def obtener_simbolos():
         pass
 
-    def agregar_fila(e):
-        lista_table.rows.append(
-            ft.DataRow([
-                ft.DataCell(ft.Text('1')),
-                ft.DataCell(ft.Text('2')),
-                ft.DataCell(ft.Text('3')),
-                ft.DataCell(ft.Text('4')),
-                ft.DataCell(ft.Text('5')),
-            ])
-        )
+    def agregar_fila(datos: list):
+        lista_table.rows.clear()
+        page.update(lista_table)
+        for i in range(0, len(datos)):
+            lista_table.rows.append(
+                ft.DataRow([
+                    ft.DataCell(ft.Text(datos[i]['nombre'])),
+                    ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
+                    ft.DataCell(ft.Text(datos[i]['prom_200'])),
+                    ft.DataCell(ft.Text(datos[i]['desv_est_200'])),
+                    ft.DataCell(ft.Text(datos[i]['prom_20'])),
+                    ft.DataCell(ft.Text(datos[i]['desv_est_20'])),
+                ])
+            )
         page.update(lista_table)
 
     def salir(e):
@@ -125,23 +144,26 @@ def main(page: ft.Page):
     login_error = ft.Text('')
     iniciar_sesion = ft.ElevatedButton('Iniciar Sesión', on_click=conectar_iol, )
     inicio_column = ft.Column(width=500, controls=[titulo, user, password, login_error, iniciar_sesion])
+    hora_actual = ft.Text('')
     lista_table = ft.DataTable(
         columns=[
-            ft.DataColumn(ft.Text('Simbolo 1')),
-            ft.DataColumn(ft.Text('Simbolo 2')),
-            ft.DataColumn(ft.Text('ratio 200 ruedas'), numeric=True),
-            ft.DataColumn(ft.Text('ratio 20 ruedas'), numeric=True),
-            ft.DataColumn(ft.Text('ratio actual (1 min)'), numeric=True),
+            ft.DataColumn(ft.Text('Nombre')),
+            ft.DataColumn(ft.Text('Ratio')),
+            ft.DataColumn(ft.Text('Media 200'), numeric=True),
+            ft.DataColumn(ft.Text('STD 200'), numeric=True),
+            ft.DataColumn(ft.Text('Media 20'), numeric=True),
+            ft.DataColumn(ft.Text('STD 20'), numeric=True),
         ],
     )
     page.add(
         ft.Row(
             controls=[
                 inicio_column,
-                ft.Image(src='principal4.jpg', width=200, border_radius=ft.border_radius.all(10), )],
+                ft.Image(src='principal.jpg', width=200, border_radius=ft.border_radius.all(10), )],
             spacing=100
         ),
         lista_table,
+        hora_actual,
         ft.ElevatedButton('agregar celda', on_click=agregar_fila),
         ft.ElevatedButton('Salir', on_click=salir),
     )
