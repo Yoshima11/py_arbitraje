@@ -1,10 +1,15 @@
-import os
 import threading
 from datetime import date
+from datetime import timedelta
+from math import sqrt
 import flet as ft
 from iol import ApiIOL
 
 iol = ApiIOL()
+
+simbolos = [
+    'AL30', 'GD30', 'AL35', 'GD35', 'AE38', 'GD38', 'TX26', 'TX28', 'DICP', 'DIP0', 'PARP', 'PAP0'
+]
 
 
 def main(page: ft.Page):
@@ -29,6 +34,7 @@ def main(page: ft.Page):
         else:
             print(iol.access_token)
             login_off()
+            ratios_hist(simbolos)
 
     def login_off():
         user.disabled = True
@@ -39,24 +45,56 @@ def main(page: ft.Page):
         iniciar_sesion.disabled = True
         page.update(user, password, login_error, iniciar_sesion)
 
-    def auto_refrescar(e):
-        cot_button.disabled = True
-        page.update(cot_button)
+    def auto_refrescar(simbolos: list):
         while True:
-            print(iol.get_price(simbolo=inst_text.value))
             event.wait(60)
             if event.is_set():
                 break
             else:
                 pass
 
-    def cot_hist(e):
-        print(iol.get_historical_price(mercado='bCBA', simbolo='TX26',
-                                       fecha_desde=date(2024, 5, 16),
-                                       fecha_hasta=date.today(), ajustada='sinAjustar'))
+    def ratios_hist(simbolos: list):
+        h_cot = {}
+        for i in simbolos:
+            h_cot[i] = iol.get_historical_price(mercado='bCBA', simbolo=i,
+                                                  fecha_desde=date.today() - timedelta(days=365),
+                                                  fecha_hasta=date.today() - timedelta(days=5),
+                                                  ajustada='sinAjustar')
+        ratios_al30_gd30 = calc_ratios(h_cot['AL30'], h_cot['GD30'])
+        print('AL30/GD30', ratios_al30_gd30)
+        ratios_al35_gd35 = calc_ratios(h_cot['AL35'], h_cot['GD35'])
+        print('AL35/GD35', ratios_al35_gd35)
+        ratios_ae38_gd38 = calc_ratios(h_cot['AE38'], h_cot['GD38'])
+        print('AE38/GD38', ratios_ae38_gd38)
+        ratios_tx26_tx28 = calc_ratios(h_cot['TX26'], h_cot['TX28'])
+        print('TX26/TX28', ratios_tx26_tx28)
+        ratios_dicp_dip0 = calc_ratios(h_cot['DICP'], h_cot['DIP0'])
+        print('DICP/DIP0', ratios_dicp_dip0)
+        ratios_parp_pap0 = calc_ratios(h_cot['PARP'], h_cot['PAP0'])
+        print('PARP/PAP0', ratios_parp_pap0)
 
-    def calc_ratio(ticker1, ticker2, ):
-        pass
+    def calc_promedio(valores: list):
+        suma = 0
+        for valor in valores:
+            suma += valor
+        return suma / len(valores)
+
+    def calc_ratios(valores_1: list, valores_2: list):
+        ratios = []
+        for i in range(0, len(valores_1)):
+            try:
+                ratios.append(valores_1[i]['ultimoPrecio'] / valores_2[i]['ultimoPrecio'])
+            except IndexError:
+                pass
+        return ratios
+
+    def desviacion_estandar(valores: list):
+        suma = 0
+        media = calc_promedio(valores)
+        for valor in valores:
+            suma += (valor - media) ** 2
+        radicando = suma / (len(valores)-1)
+        return sqrt(radicando)
 
     def obtener_simbolos():
         pass
@@ -76,6 +114,7 @@ def main(page: ft.Page):
     def salir(e):
         page.window_destroy()
         event.set()
+
     titulo = ft.Text('Inicio sesión API Invertir Online', size=18, text_align=ft.TextAlign.START, width=500)
     user = ft.TextField(label='Nombre de Usuario', value='', )
     password = ft.TextField(label='Contraseña', value='', password=True, can_reveal_password=True)
@@ -83,13 +122,13 @@ def main(page: ft.Page):
     iniciar_sesion = ft.ElevatedButton('Iniciar Sesión', on_click=conectar_iol, )
     inicio_column = ft.Column(width=500, controls=[titulo, user, password, login_error, iniciar_sesion])
     lista_table = ft.DataTable(
-                        columns=[
-                            ft.DataColumn(ft.Text('Simbolo 1')),
-                            ft.DataColumn(ft.Text('Simbolo 2')),
-                            ft.DataColumn(ft.Text('ratio 200 ruedas'), numeric=True),
-                            ft.DataColumn(ft.Text('ratio 20 ruedas'), numeric=True),
-                            ft.DataColumn(ft.Text('ratio actual (1 min)'), numeric=True),
-                        ],
+        columns=[
+            ft.DataColumn(ft.Text('Simbolo 1')),
+            ft.DataColumn(ft.Text('Simbolo 2')),
+            ft.DataColumn(ft.Text('ratio 200 ruedas'), numeric=True),
+            ft.DataColumn(ft.Text('ratio 20 ruedas'), numeric=True),
+            ft.DataColumn(ft.Text('ratio actual (1 min)'), numeric=True),
+        ],
     )
     page.add(
         ft.Row(
