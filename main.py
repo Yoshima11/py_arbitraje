@@ -55,32 +55,27 @@ def main(page: ft.Page):
 
     def ratios_hist(simbolos: list):
         h_cot = {}
+        ratios = []
         for i in simbolos:
             h_cot[i] = iol.get_historical_price(mercado='bCBA', simbolo=i,
-                                                  fecha_desde=date.today() - timedelta(days=365),
-                                                  fecha_hasta=date.today() - timedelta(days=5),
-                                                  ajustada='sinAjustar')
-        ratios_al30_gd30 = calc_ratios(h_cot['AL30'], h_cot['GD30'])
-        print('AL30/GD30', ratios_al30_gd30)
-        ratios_al35_gd35 = calc_ratios(h_cot['AL35'], h_cot['GD35'])
-        print('AL35/GD35', ratios_al35_gd35)
-        ratios_ae38_gd38 = calc_ratios(h_cot['AE38'], h_cot['GD38'])
-        print('AE38/GD38', ratios_ae38_gd38)
-        ratios_tx26_tx28 = calc_ratios(h_cot['TX26'], h_cot['TX28'])
-        print('TX26/TX28', ratios_tx26_tx28)
-        ratios_dicp_dip0 = calc_ratios(h_cot['DICP'], h_cot['DIP0'])
-        print('DICP/DIP0', ratios_dicp_dip0)
-        ratios_parp_pap0 = calc_ratios(h_cot['PARP'], h_cot['PAP0'])
-        print('PARP/PAP0', ratios_parp_pap0)
-        al30_gd30 = {}
-        al30_gd30['promedio'] = calc_promedio(ratios_al30_gd30)
-        al30_gd30['desv_est'] = desviacion_estandar(ratios_al30_gd30)
-        print('al30/gd30: prom-2desv * prom * prom+2desv', al30_gd30['promedio'] - (al30_gd30['desv_est'] * 2), al30_gd30['promedio'], al30_gd30['promedio'] + (al30_gd30['desv_est'] * 2))
-        al35_gd35 = {}
-        ae38_gd38 = {}
-        tx26_tx28 = {}
-        dicp_dip0 = {}
-        parp_pap0 = {}
+                                                fecha_desde=date.today() - timedelta(days=365),
+                                                fecha_hasta=date.today() - timedelta(days=5),
+                                                ajustada='sinAjustar')
+        for i in range(0, len(simbolos), 2):
+            valor_1_200 = h_cot[simbolos[i]][0:200]
+            valor_2_200 = h_cot[simbolos[i + 1]][0:200]
+            ratios_200 = calc_ratio_hist(valor_1_200, valor_2_200)
+            valor_1_20 = h_cot[simbolos[i]][0:20]
+            valor_2_20 = h_cot[simbolos[i + 1]][0:20]
+            ratios_20 = calc_ratio_hist(valor_1_20, valor_2_20)
+            ratios.append({'nombre': f'{simbolos[i]}/{simbolos[i + 1]}',
+                           'prom_200': calc_promedio(ratios_200),
+                           'desv_est_200': desviacion_estandar(ratios_200),
+                           'prom_20': calc_promedio(ratios_20),
+                           'desv_est_20': desviacion_estandar(ratios_20),
+                           })
+        for i in range(0, len(ratios)):
+            print(ratios[i])
 
     def calc_promedio(valores: list):
         suma = 0
@@ -88,7 +83,7 @@ def main(page: ft.Page):
             suma += valor
         return suma / len(valores)
 
-    def calc_ratios(valores_1: list, valores_2: list):
+    def calc_ratio_hist(valores_1: list, valores_2: list):
         ratios = []
         for i in range(0, len(valores_1)):
             try:
@@ -102,7 +97,7 @@ def main(page: ft.Page):
         media = calc_promedio(valores)
         for valor in valores:
             suma += (valor - media) ** 2
-        radicando = suma / (len(valores)-1)
+        radicando = suma / (len(valores) - 1)
         return sqrt(radicando)
 
     def obtener_simbolos():
