@@ -48,27 +48,15 @@ def main(page: ft.Page):
         page.update(user, password, login_error, iniciar_sesion)
 
     def auto_refrescar(datos: list):
-        datos_2 = datos
         while True:
             for i in range(0, len(datos)):
-                #ratio_actual = (iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')['ultimoPrecio'] /
-                #                iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')['ultimoPrecio'])
-                #precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')['ultimoPrecio']
-                #precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')['ultimoPrecio']
-                #ratio_actual = precio_1 / precio_2
                 precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')
                 precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')
                 ratio_actual = precio_1['ultimoPrecio'] / precio_2['ultimoPrecio']
-
-                datos_2[i]['simbolo_1'] = precio_1
-                datos_2[i]['simbolo_2'] = precio_2
-                datos_2[i]['ratio_actual'] = ratio_actual
-
-                datos[i]['precio_1'] = precio_1['ultimoPrecio']
-                datos[i]['precio_2'] = precio_2['ultimoPrecio']
+                datos[i]['simbolo_1'] = precio_1
+                datos[i]['simbolo_2'] = precio_2
                 datos[i]['ratio_actual'] = ratio_actual
-
-            print(datos_2)
+                print(datos[i])
             hora_actual.value = f'Ultima actualización: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}'
             page.update(hora_actual)
             agregar_fila(datos)
@@ -87,22 +75,22 @@ def main(page: ft.Page):
                                                 fecha_hasta=date.today() - timedelta(days=5),
                                                 ajustada='sinAjustar')
         for i in range(0, len(simbolos), 2):
-            valor_1_200 = h_cot[simbolos[i]][0:200]
-            valor_2_200 = h_cot[simbolos[i + 1]][0:200]
-            ratios_200 = calc_ratio_hist(valor_1_200, valor_2_200)
-            valor_1_20 = h_cot[simbolos[i]][0:20]
-            valor_2_20 = h_cot[simbolos[i + 1]][0:20]
-            ratios_20 = calc_ratio_hist(valor_1_20, valor_2_20)
             ratios.append({'simbolo_1': simbolos[i],
                            'simbolo_2': simbolos[i+1],
                            'nombre': f'{simbolos[i]}/{simbolos[i + 1]}',
-                           'prom_200': calc_promedio(ratios_200),
-                           'desv_est_200': desviacion_estandar(ratios_200),
-                           'prom_20': calc_promedio(ratios_20),
-                           'desv_est_20': desviacion_estandar(ratios_20),
+                           'prom_200': calc_promedio(calc_ratio_hist(h_cot[simbolos[i]][0:200],
+                                                                     h_cot[simbolos[i + 1]][0:200])),
+                           'desv_est_200': desviacion_estandar(calc_ratio_hist(h_cot[simbolos[i]][0:200],
+                                                                               h_cot[simbolos[i + 1]][0:200])),
+                           'prom_20': calc_promedio(calc_ratio_hist(h_cot[simbolos[i]][0:20],
+                                                                    h_cot[simbolos[i + 1]][0:20])),
+                           'desv_est_20': desviacion_estandar(calc_ratio_hist(h_cot[simbolos[i]][0:20],
+                                                                              h_cot[simbolos[i + 1]][0:20])),
+                           'prom_5': calc_promedio(calc_ratio_hist(h_cot[simbolos[i]][0:5],
+                                                                   h_cot[simbolos[i + 1]][0:5])),
+                           'desv_est_5': desviacion_estandar(calc_ratio_hist(h_cot[simbolos[i]][0:5],
+                                                                             h_cot[simbolos[i + 1]][0:5])),
                            })
-        for i in range(0, len(ratios)):
-            print(ratios[i])
         return ratios
 
     def calc_promedio(valores: list):
@@ -137,7 +125,6 @@ def main(page: ft.Page):
         for i in range(0, len(datos)):
             lista_table.rows.append(
                 ft.DataRow([
-                    ft.DataCell(ft.Text(datos[i]['nombre'])),
                     ft.DataCell(ft.Text(datos[i]['nombre'])),
                     ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
                     ft.DataCell(ft.Text(datos[i]['prom_200'])),
