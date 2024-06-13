@@ -48,14 +48,27 @@ def main(page: ft.Page):
         page.update(user, password, login_error, iniciar_sesion)
 
     def auto_refrescar(datos: list):
+        datos_2 = datos
         while True:
             for i in range(0, len(datos)):
-                print(datos[i]['simbolo_1'], datos[i]['simbolo_2'])
-                ratio_actual = (iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')['ultimoPrecio'] /
-                                iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')['ultimoPrecio'])
-                print(ratio_actual)
+                #ratio_actual = (iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')['ultimoPrecio'] /
+                #                iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')['ultimoPrecio'])
+                #precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')['ultimoPrecio']
+                #precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')['ultimoPrecio']
+                #ratio_actual = precio_1 / precio_2
+                precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')
+                precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')
+                ratio_actual = precio_1['ultimoPrecio'] / precio_2['ultimoPrecio']
+
+                datos_2[i]['simbolo_1'] = precio_1
+                datos_2[i]['simbolo_2'] = precio_2
+                datos_2[i]['ratio_actual'] = ratio_actual
+
+                datos[i]['precio_1'] = precio_1['ultimoPrecio']
+                datos[i]['precio_2'] = precio_2['ultimoPrecio']
                 datos[i]['ratio_actual'] = ratio_actual
-                print(datos)
+
+            print(datos_2)
             hora_actual.value = f'Ultima actualización: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}'
             page.update(hora_actual)
             agregar_fila(datos)
@@ -124,6 +137,7 @@ def main(page: ft.Page):
         for i in range(0, len(datos)):
             lista_table.rows.append(
                 ft.DataRow([
+                    ft.DataCell(ft.Text(datos[i]['nombre'])),
                     ft.DataCell(ft.Text(datos[i]['nombre'])),
                     ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
                     ft.DataCell(ft.Text(datos[i]['prom_200'])),
