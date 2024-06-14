@@ -17,6 +17,8 @@ def main(page: ft.Page):
     event = threading.Event()
     page.title = "py_arbitrador"
     page.vertical_alignment = ft.MainAxisAlignment.START
+    page.horizontal_alignment = ft.CrossAxisAlignment.START
+    page.scroll = 'adaptive'
 
     def conectar_iol(e):
         login_error.color = 'black'
@@ -50,8 +52,8 @@ def main(page: ft.Page):
     def auto_refrescar(datos: list):
         while True:
             for i in range(0, len(datos)):
-                precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t0')
-                precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t0')
+                precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t1')
+                precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t1')
                 ratio_actual = precio_1['ultimoPrecio'] / precio_2['ultimoPrecio']
                 datos[i]['simbolo_1'] = precio_1
                 datos[i]['simbolo_2'] = precio_2
@@ -127,10 +129,14 @@ def main(page: ft.Page):
                 ft.DataRow([
                     ft.DataCell(ft.Text(datos[i]['nombre'])),
                     ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
+                    ft.DataCell(ft.Text(datos[i]['prom_5'] + datos[i]['desv_est_5'])),
+                    ft.DataCell(ft.Text(datos[i]['prom_5'] - datos[i]['desv_est_5'])),
                     ft.DataCell(ft.Text(datos[i]['prom_200'])),
                     ft.DataCell(ft.Text(datos[i]['desv_est_200'])),
                     ft.DataCell(ft.Text(datos[i]['prom_20'])),
                     ft.DataCell(ft.Text(datos[i]['desv_est_20'])),
+                    ft.DataCell(ft.Text(datos[i]['prom_5'])),
+                    ft.DataCell(ft.Text(datos[i]['desv_est_5'])),
                 ])
             )
         page.update(lista_table)
@@ -149,13 +155,23 @@ def main(page: ft.Page):
     lista_table = ft.DataTable(
         columns=[
             ft.DataColumn(ft.Text('Nombre')),
-            ft.DataColumn(ft.Text('Ratio')),
+            ft.DataColumn(ft.Text('Ratio'), numeric=True),
+            ft.DataColumn(ft.Text('prom5 + desv'), numeric=True),
+            ft.DataColumn(ft.Text('prom5 - desv'), numeric=True),
             ft.DataColumn(ft.Text('Media 200'), numeric=True),
             ft.DataColumn(ft.Text('STD 200'), numeric=True),
             ft.DataColumn(ft.Text('Media 20'), numeric=True),
             ft.DataColumn(ft.Text('STD 20'), numeric=True),
+            ft.DataColumn(ft.Text('Media 5'), numeric=True),
+            ft.DataColumn(ft.Text('STD 5'), numeric=True),
         ],
+        border=ft.border.all(2, 'grey'),
+        border_radius=0,
+        heading_row_color=ft.colors.GREY_200,
+        data_text_style=ft.TextStyle(size=12),
+        heading_text_style=ft.TextStyle(size=15),
     )
+    table_column = ft.Column(controls=[lista_table], height=500, scroll=ft.ScrollMode.ALWAYS)
     page.add(
         ft.Row(
             controls=[
@@ -163,7 +179,7 @@ def main(page: ft.Page):
                 ft.Image(src='principal.jpg', width=200, border_radius=ft.border_radius.all(10), )],
             spacing=100
         ),
-        lista_table,
+        table_column,
         hora_actual,
         ft.ElevatedButton('agregar celda', on_click=agregar_fila),
         ft.ElevatedButton('Salir', on_click=salir),
