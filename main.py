@@ -17,22 +17,26 @@ class ratio_indicador(ft.Row):
     def __init__(self,
                  simbolo_1: str = None,
                  simbolo_2: str = None,
-                 v_min: float = None,
-                 v_max: float = None,
-                 valor: float = None):
+                 des_min: float = None,
+                 des_max: float = None,
+                 v_ratio: float = None):
         super().__init__()
         self.sim_1 = ft.Text(simbolo_1)
         self.sim_2 = ft.Text(simbolo_2)
-        self.minimo = ft.Text(v_min)
-        self.ratio = ft.Text(valor)
-        self.maximo = ft.Text(v_max)
+        self.ratio = ft.Text(value=str(self.ajustar_valores(des_min, des_max, v_ratio)))
         self.controls = [
             self.sim_1,
-            self.minimo,
             self.ratio,
-            self.maximo,
             self.sim_2,
         ]
+
+    def ajustar_valores(self,
+                        v_min: float,
+                        v_max: float,
+                        v_ratio: float):
+        res = v_max - v_min
+        por = (v_ratio - v_min) / res * 100
+        return por
 
 
 def main(page: ft.Page):
@@ -73,18 +77,18 @@ def main(page: ft.Page):
 
     def auto_refrescar(datos: list):
         while True:
+            hora_actual.value = f'Ultima actualización: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}'
             for i in range(0, len(datos)):
                 precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t1')
                 precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t1')
                 ratio_actual = float(precio_1['ultimoPrecio']) / float(precio_2['ultimoPrecio'])
-                datos[i]['simbolo_1'] = precio_1
-                datos[i]['simbolo_2'] = precio_2
+                datos[i]['sim_1'] = precio_1
+                datos[i]['sim_2'] = precio_2
                 datos[i]['ratio_actual'] = ratio_actual
                 print(datos[i])
-            hora_actual.value = f'Ultima actualización: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}'
             page.update(hora_actual)
             agregar_fila(datos)
-            event.wait(60)
+            event.wait(60*5)
             if event.is_set():
                 break
             else:
@@ -150,11 +154,11 @@ def main(page: ft.Page):
             lista_table.rows.append(
                 ft.DataRow([
                     ft.DataCell(ft.Text(datos[i]['nombre'])),
-                    ft.DataCell(ratio_indicador(simbolo_1=datos[i]['simbolo_1']['simbolo'],
-                                                simbolo_2=datos[i]['simbolo_2']['simbolo'],
-                                                v_min=datos[i]['prom_5'] - datos[i]['desv_est_5'],
-                                                v_max=datos[i]['prom_5'] + datos[i]['desv_est_5'],
-                                                valor=datos[i]['ratio_actual'])),
+                    ft.DataCell(ratio_indicador(simbolo_1=datos[i]['sim_1']['simbolo'],
+                                                simbolo_2=datos[i]['sim_2']['simbolo'],
+                                                des_min=datos[i]['prom_5'] - datos[i]['desv_est_5'],
+                                                des_max=datos[i]['prom_5'] + datos[i]['desv_est_5'],
+                                                v_ratio=datos[i]['ratio_actual'],)),
                     ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
                     ft.DataCell(ft.Text(datos[i]['prom_5'] + datos[i]['desv_est_5'])),
                     ft.DataCell(ft.Text(datos[i]['prom_5'] - datos[i]['desv_est_5'])),
