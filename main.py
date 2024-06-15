@@ -13,6 +13,28 @@ simbolos = [
 ]
 
 
+class ratio_indicador(ft.Row):
+    def __init__(self,
+                 simbolo_1: str = None,
+                 simbolo_2: str = None,
+                 v_min: float = None,
+                 v_max: float = None,
+                 valor: float = None):
+        super().__init__()
+        self.sim_1 = ft.Text(simbolo_1)
+        self.sim_2 = ft.Text(simbolo_2)
+        self.minimo = ft.Text(v_min)
+        self.ratio = ft.Text(valor)
+        self.maximo = ft.Text(v_max)
+        self.controls = [
+            self.sim_1,
+            self.minimo,
+            self.ratio,
+            self.maximo,
+            self.sim_2,
+        ]
+
+
 def main(page: ft.Page):
     event = threading.Event()
     page.title = "py_arbitrador"
@@ -54,7 +76,7 @@ def main(page: ft.Page):
             for i in range(0, len(datos)):
                 precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t1')
                 precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t1')
-                ratio_actual = precio_1['ultimoPrecio'] / precio_2['ultimoPrecio']
+                ratio_actual = float(precio_1['ultimoPrecio']) / float(precio_2['ultimoPrecio'])
                 datos[i]['simbolo_1'] = precio_1
                 datos[i]['simbolo_2'] = precio_2
                 datos[i]['ratio_actual'] = ratio_actual
@@ -78,7 +100,7 @@ def main(page: ft.Page):
                                                 ajustada='sinAjustar')
         for i in range(0, len(simbolos), 2):
             ratios.append({'simbolo_1': simbolos[i],
-                           'simbolo_2': simbolos[i+1],
+                           'simbolo_2': simbolos[i + 1],
                            'nombre': f'{simbolos[i]}/{simbolos[i + 1]}',
                            'prom_200': calc_promedio(calc_ratio_hist(h_cot[simbolos[i]][0:200],
                                                                      h_cot[simbolos[i + 1]][0:200])),
@@ -128,6 +150,11 @@ def main(page: ft.Page):
             lista_table.rows.append(
                 ft.DataRow([
                     ft.DataCell(ft.Text(datos[i]['nombre'])),
+                    ft.DataCell(ratio_indicador(simbolo_1=datos[i]['simbolo_1']['simbolo'],
+                                                simbolo_2=datos[i]['simbolo_2']['simbolo'],
+                                                v_min=datos[i]['prom_5'] - datos[i]['desv_est_5'],
+                                                v_max=datos[i]['prom_5'] + datos[i]['desv_est_5'],
+                                                valor=datos[i]['ratio_actual'])),
                     ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
                     ft.DataCell(ft.Text(datos[i]['prom_5'] + datos[i]['desv_est_5'])),
                     ft.DataCell(ft.Text(datos[i]['prom_5'] - datos[i]['desv_est_5'])),
@@ -139,7 +166,7 @@ def main(page: ft.Page):
                     ft.DataCell(ft.Text(datos[i]['desv_est_5'])),
                 ])
             )
-        page.update(lista_table)
+        page.update()
 
     def salir(e):
         page.window_destroy()
@@ -155,6 +182,7 @@ def main(page: ft.Page):
     lista_table = ft.DataTable(
         columns=[
             ft.DataColumn(ft.Text('Nombre')),
+            ft.DataColumn(ft.Text('Indicador')),
             ft.DataColumn(ft.Text('Ratio'), numeric=True),
             ft.DataColumn(ft.Text('prom5 + desv'), numeric=True),
             ft.DataColumn(ft.Text('prom5 - desv'), numeric=True),
@@ -171,12 +199,13 @@ def main(page: ft.Page):
         data_text_style=ft.TextStyle(size=12),
         heading_text_style=ft.TextStyle(size=15),
     )
-    table_column = ft.Column(controls=[lista_table], height=500, scroll=ft.ScrollMode.ALWAYS)
+    table_column = ft.Column(controls=[lista_table], height=650, scroll=ft.ScrollMode.ALWAYS)
     page.add(
         ft.Row(
             controls=[
                 inicio_column,
-                ft.Image(src='principal.jpg', width=200, border_radius=ft.border_radius.all(10), )],
+                ft.Image(src='principal.jpg', width=200, border_radius=ft.border_radius.all(10)),
+            ],
             spacing=100
         ),
         table_column,
