@@ -9,7 +9,12 @@ from iol import ApiIOL
 iol = ApiIOL()
 
 simbolos = [
-    'AL30', 'GD30', 'AL35', 'GD35', 'AE38', 'GD38', 'TX26', 'TX28', 'DICP', 'DIP0', 'PARP', 'PAP0'
+    ['AL30', 'GD30'],
+    ['AL35', 'GD35'],
+    ['AE38', 'GD38'],
+    ['TX26', 'TX28'],
+    ['DICP', 'DIP0'],
+    ['PARP', 'PAP0'],
 ]
 
 
@@ -88,37 +93,46 @@ def main(page: ft.Page):
                 print(datos[i])
             page.update(hora_actual)
             agregar_fila(datos)
-            event.wait(60*5)
+            event.wait(60 * 5)
             if event.is_set():
                 break
             else:
                 pass
 
     def ratios_hist(simbolos: list):
-        h_cot = {}
+        h_cot = []
         ratios = []
-        for i in simbolos:
-            h_cot[i] = iol.get_historical_price(mercado='bCBA', simbolo=i,
-                                                fecha_desde=date.today() - timedelta(days=365),
-                                                fecha_hasta=date.today() - timedelta(days=5),
-                                                ajustada='sinAjustar')
-        for i in range(0, len(simbolos), 2):
-            ratios.append({'simbolo_1': simbolos[i],
-                           'simbolo_2': simbolos[i + 1],
-                           'nombre': f'{simbolos[i]}/{simbolos[i + 1]}',
-                           'prom_200': calc_promedio(calc_ratio_hist(h_cot[simbolos[i]][0:200],
-                                                                     h_cot[simbolos[i + 1]][0:200])),
-                           'desv_est_200': desviacion_estandar(calc_ratio_hist(h_cot[simbolos[i]][0:200],
-                                                                               h_cot[simbolos[i + 1]][0:200])),
-                           'prom_20': calc_promedio(calc_ratio_hist(h_cot[simbolos[i]][0:20],
-                                                                    h_cot[simbolos[i + 1]][0:20])),
-                           'desv_est_20': desviacion_estandar(calc_ratio_hist(h_cot[simbolos[i]][0:20],
-                                                                              h_cot[simbolos[i + 1]][0:20])),
-                           'prom_5': calc_promedio(calc_ratio_hist(h_cot[simbolos[i]][0:5],
-                                                                   h_cot[simbolos[i + 1]][0:5])),
-                           'desv_est_5': desviacion_estandar(calc_ratio_hist(h_cot[simbolos[i]][0:5],
-                                                                             h_cot[simbolos[i + 1]][0:5])),
+        for i in range(0, len(simbolos)):
+            h_cot.append([iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][0],
+                                                   fecha_desde=date.today() - timedelta(days=365),
+                                                   fecha_hasta=date.today() - timedelta(days=5),
+                                                   ajustada='sinAjustar'),
+                          iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][1],
+                                                   fecha_desde=date.today() - timedelta(days=365),
+                                                   fecha_hasta=date.today() - timedelta(days=5),
+                                                   ajustada='sinAjustar'),
+                          ])
+            print(h_cot[i][0])
+            print(h_cot[i][1])
+        for i in range(0, len(simbolos)):
+            print(simbolos[i])
+            ratios.append({'simbolo_1': simbolos[i][0],
+                           'simbolo_2': simbolos[i][1],
+                           'nombre': f'{simbolos[i][0]}/{simbolos[i][1]}',
+                           'prom_200': calc_promedio(calc_ratio_hist(h_cot[i][0][0:200],
+                                                                     h_cot[i][1][0:200])),
+                           'desv_est_200': desviacion_estandar(calc_ratio_hist(h_cot[i][0][0:200],
+                                                                               h_cot[i][1][0:200])),
+                           'prom_20': calc_promedio(calc_ratio_hist(h_cot[i][0][0:20],
+                                                                    h_cot[i][1][0:20])),
+                           'desv_est_20': desviacion_estandar(calc_ratio_hist(h_cot[i][0][0:20],
+                                                                              h_cot[i][1][0:20])),
+                           'prom_5': calc_promedio(calc_ratio_hist(h_cot[i][0][0:5],
+                                                                   h_cot[i][1][0:5])),
+                           'desv_est_5': desviacion_estandar(calc_ratio_hist(h_cot[i][0][0:5],
+                                                                             h_cot[i][1][0:5])),
                            })
+            print(ratios[i])
         return ratios
 
     def calc_promedio(valores: list):
@@ -158,7 +172,7 @@ def main(page: ft.Page):
                                                 simbolo_2=datos[i]['sim_2']['simbolo'],
                                                 des_min=datos[i]['prom_5'] - datos[i]['desv_est_5'],
                                                 des_max=datos[i]['prom_5'] + datos[i]['desv_est_5'],
-                                                v_ratio=datos[i]['ratio_actual'],)),
+                                                v_ratio=datos[i]['ratio_actual'], )),
                     ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
                     ft.DataCell(ft.Text(datos[i]['prom_5'] + datos[i]['desv_est_5'])),
                     ft.DataCell(ft.Text(datos[i]['prom_5'] - datos[i]['desv_est_5'])),
