@@ -112,10 +112,7 @@ def main(page: ft.Page):
                                                    fecha_hasta=date.today() - timedelta(days=5),
                                                    ajustada='sinAjustar'),
                           ])
-            print(h_cot[i][0])
-            print(h_cot[i][1])
         for i in range(0, len(simbolos)):
-            print(simbolos[i])
             ratios.append({'simbolo_1': simbolos[i][0],
                            'simbolo_2': simbolos[i][1],
                            'nombre': f'{simbolos[i][0]}/{simbolos[i][1]}',
@@ -132,7 +129,6 @@ def main(page: ft.Page):
                            'desv_est_5': desviacion_estandar(calc_ratio_hist(h_cot[i][0][0:5],
                                                                              h_cot[i][1][0:5])),
                            })
-            print(ratios[i])
         return ratios
 
     def calc_promedio(valores: list):
