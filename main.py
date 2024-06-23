@@ -4,6 +4,7 @@ from datetime import timedelta
 from datetime import datetime
 from math import sqrt
 import flet as ft
+import flet.canvas as cv
 from iol import ApiIOL
 
 iol = ApiIOL()
@@ -26,13 +27,36 @@ class ratio_indicador(ft.Row):
                  des_max: float = None,
                  v_ratio: float = None):
         super().__init__()
+        self.marg_x = 2
+        self.marg_y = 2
+        self.ancho = 50
+        self.alto = 30
         self.sim_1 = ft.Text(simbolo_1)
         self.sim_2 = ft.Text(simbolo_2)
-        self.ratio = ft.Text(value=str(self.ajustar_valores(des_min, des_max, v_ratio)))
+        self.num_ratio = self.ajustar_valores(des_min, des_max, v_ratio)
+        self.ratio = ft.Text(value=str(self.num_ratio))
+        self.barra = cv.Canvas(
+            [
+                cv.Rect(0, 0, self.ancho * 3 + 4, self.alto + 4, paint=ft.Paint(ft.colors.WHITE)),
+                cv.Rect(self.marg_x, self.marg_y, self.ancho, self.alto, paint=ft.Paint(ft.colors.GREEN_50)),
+                cv.Rect(self.ancho + self.marg_x, self.marg_y, self.ancho, self.alto,
+                        paint=ft.Paint(ft.colors.AMBER_50)),
+                cv.Rect(self.ancho * 2 + self.marg_x, self.marg_y, self.ancho, self.alto,
+                        paint=ft.Paint(ft.colors.GREEN_50)),
+                cv.Text(self.ancho / 2 + self.marg_x, self.marg_y, simbolo_1, alignment=ft.alignment.top_center),
+                cv.Text((self.ancho * 2) + (self.ancho / 2) + self.marg_x, self.marg_y, simbolo_2,
+                        alignment=ft.alignment.top_center),
+                cv.Rect(self.num_ratio + self.ancho + self.marg_x, self.marg_y, 3, self.alto,
+                        paint=ft.Paint(ft.colors.RED)),
+            ],
+            width=self.ancho + 4,
+            height=self.alto + 4,
+        )
         self.controls = [
-            self.sim_1,
-            self.ratio,
-            self.sim_2,
+            #self.sim_1,
+            #self.ratio,
+            self.barra,
+            #self.sim_2,
         ]
 
     def ajustar_valores(self,
@@ -40,7 +64,11 @@ class ratio_indicador(ft.Row):
                         v_max: float,
                         v_ratio: float):
         res = v_max - v_min
-        por = (v_ratio - v_min) / res * 100
+        por = (v_ratio - v_min) / res * self.ancho
+        if por >= self.ancho*2:
+            por = self.ancho*2
+        if por <= -self.ancho:
+            por = -self.ancho
         return por
 
 
@@ -93,7 +121,7 @@ def main(page: ft.Page):
                 print(datos[i])
             page.update(hora_actual)
             agregar_fila(datos)
-            event.wait(60 * 5)
+            event.wait(60)
             if event.is_set():
                 break
             else:
@@ -105,11 +133,11 @@ def main(page: ft.Page):
         for i in range(0, len(simbolos)):
             h_cot.append([iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][0],
                                                    fecha_desde=date.today() - timedelta(days=365),
-                                                   fecha_hasta=date.today() - timedelta(days=5),
+                                                   fecha_hasta=date.today() - timedelta(days=1),
                                                    ajustada='sinAjustar'),
                           iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][1],
                                                    fecha_desde=date.today() - timedelta(days=365),
-                                                   fecha_hasta=date.today() - timedelta(days=5),
+                                                   fecha_hasta=date.today() - timedelta(days=1),
                                                    ajustada='sinAjustar'),
                           ])
         for i in range(0, len(simbolos)):
@@ -154,9 +182,6 @@ def main(page: ft.Page):
         radicando = suma / (len(valores) - 1)
         return sqrt(radicando)
 
-    def obtener_simbolos():
-        pass
-
     def agregar_fila(datos: list):
         lista_table.rows.clear()
         page.update(lista_table)
@@ -168,16 +193,18 @@ def main(page: ft.Page):
                                                 simbolo_2=datos[i]['sim_2']['simbolo'],
                                                 des_min=datos[i]['prom_5'] - datos[i]['desv_est_5'],
                                                 des_max=datos[i]['prom_5'] + datos[i]['desv_est_5'],
-                                                v_ratio=datos[i]['ratio_actual'], )),
+                                                v_ratio=datos[i]['ratio_actual'])),
+                    ft.DataCell(ratio_indicador(simbolo_1=datos[i]['sim_1']['simbolo'],
+                                                simbolo_2=datos[i]['sim_2']['simbolo'],
+                                                des_min=datos[i]['prom_20'] - datos[i]['desv_est_20'],
+                                                des_max=datos[i]['prom_20'] + datos[i]['desv_est_20'],
+                                                v_ratio=datos[i]['ratio_actual'])),
+                    ft.DataCell(ratio_indicador(simbolo_1=datos[i]['sim_1']['simbolo'],
+                                                simbolo_2=datos[i]['sim_2']['simbolo'],
+                                                des_min=datos[i]['prom_200'] - datos[i]['desv_est_200'],
+                                                des_max=datos[i]['prom_200'] + datos[i]['desv_est_200'],
+                                                v_ratio=datos[i]['ratio_actual'])),
                     ft.DataCell(ft.Text(datos[i]['ratio_actual'])),
-                    ft.DataCell(ft.Text(datos[i]['prom_5'] + datos[i]['desv_est_5'])),
-                    ft.DataCell(ft.Text(datos[i]['prom_5'] - datos[i]['desv_est_5'])),
-                    ft.DataCell(ft.Text(datos[i]['prom_200'])),
-                    ft.DataCell(ft.Text(datos[i]['desv_est_200'])),
-                    ft.DataCell(ft.Text(datos[i]['prom_20'])),
-                    ft.DataCell(ft.Text(datos[i]['desv_est_20'])),
-                    ft.DataCell(ft.Text(datos[i]['prom_5'])),
-                    ft.DataCell(ft.Text(datos[i]['desv_est_5'])),
                 ])
             )
         page.update()
@@ -196,22 +223,17 @@ def main(page: ft.Page):
     lista_table = ft.DataTable(
         columns=[
             ft.DataColumn(ft.Text('Nombre')),
-            ft.DataColumn(ft.Text('Indicador')),
+            ft.DataColumn(ft.Text('Indicador 5')),
+            ft.DataColumn(ft.Text('Indicador 20')),
+            ft.DataColumn(ft.Text('Indicador 200')),
             ft.DataColumn(ft.Text('Ratio'), numeric=True),
-            ft.DataColumn(ft.Text('prom5 + desv'), numeric=True),
-            ft.DataColumn(ft.Text('prom5 - desv'), numeric=True),
-            ft.DataColumn(ft.Text('Media 200'), numeric=True),
-            ft.DataColumn(ft.Text('STD 200'), numeric=True),
-            ft.DataColumn(ft.Text('Media 20'), numeric=True),
-            ft.DataColumn(ft.Text('STD 20'), numeric=True),
-            ft.DataColumn(ft.Text('Media 5'), numeric=True),
-            ft.DataColumn(ft.Text('STD 5'), numeric=True),
         ],
         border=ft.border.all(2, 'grey'),
         border_radius=0,
         heading_row_color=ft.colors.GREY_200,
         data_text_style=ft.TextStyle(size=12),
         heading_text_style=ft.TextStyle(size=15),
+        width=1300,
     )
     table_column = ft.Column(controls=[lista_table], height=650, scroll=ft.ScrollMode.ALWAYS)
     page.add(
