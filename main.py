@@ -12,6 +12,7 @@ iol = ApiIOL()
 simbolos = [
     ['AL30', 'GD30'],
     ['AL35', 'GD35'],
+    ['AL30', 'AL35'],
     ['AE38', 'GD38'],
     ['TX26', 'TX28'],
     ['DICP', 'DIP0'],
@@ -31,10 +32,7 @@ class ratio_indicador(ft.Row):
         self.marg_y = 2
         self.ancho = 50
         self.alto = 30
-        self.sim_1 = ft.Text(simbolo_1)
-        self.sim_2 = ft.Text(simbolo_2)
         self.num_ratio = self.ajustar_valores(des_min, des_max, v_ratio)
-        self.ratio = ft.Text(value=str(self.num_ratio))
         self.barra = cv.Canvas(
             [
                 cv.Rect(0, 0, self.ancho * 3 + 4, self.alto + 4, paint=ft.Paint(ft.colors.WHITE)),
@@ -49,14 +47,11 @@ class ratio_indicador(ft.Row):
                 cv.Rect(self.num_ratio + self.ancho + self.marg_x, self.marg_y, 3, self.alto,
                         paint=ft.Paint(ft.colors.RED)),
             ],
-            width=self.ancho + 4,
-            height=self.alto + 4,
+            width=self.ancho + (self.marg_x * 2),
+            height=self.alto + (self.marg_y * 2),
         )
         self.controls = [
-            #self.sim_1,
-            #self.ratio,
             self.barra,
-            #self.sim_2,
         ]
 
     def ajustar_valores(self,
@@ -246,7 +241,6 @@ def main(page: ft.Page):
         ),
         table_column,
         hora_actual,
-        ft.ElevatedButton('agregar celda', on_click=agregar_fila),
         ft.ElevatedButton('Salir', on_click=salir),
     )
 
