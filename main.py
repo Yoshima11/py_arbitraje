@@ -60,8 +60,8 @@ class ratio_indicador(ft.Row):
                         v_ratio: float):
         res = v_max - v_min
         por = (v_ratio - v_min) / res * self.ancho
-        if por >= self.ancho*2:
-            por = self.ancho*2
+        if por >= self.ancho * 2:
+            por = self.ancho * 2
         if por <= -self.ancho:
             por = -self.ancho
         return por
@@ -126,15 +126,17 @@ def main(page: ft.Page):
         h_cot = []
         ratios = []
         for i in range(0, len(simbolos)):
-            h_cot.append([iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][0],
-                                                   fecha_desde=date.today() - timedelta(days=365),
-                                                   fecha_hasta=date.today() - timedelta(days=2),
-                                                   ajustada='sinAjustar'),
-                          iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][1],
-                                                   fecha_desde=date.today() - timedelta(days=365),
-                                                   fecha_hasta=date.today() - timedelta(days=2),
-                                                   ajustada='sinAjustar'),
-                          ])
+            cot_hist_sim_1 = iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][0],
+                                                      fecha_desde=date.today() - timedelta(days=365),
+                                                      fecha_hasta=date.today(),
+                                                      ajustada='sinAjustar')
+            cot_hist_sim_2 = iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][1],
+                                                      fecha_desde=date.today() - timedelta(days=365),
+                                                      fecha_hasta=date.today(),
+                                                      ajustada='sinAjustar')
+            h_cot.append([filtra_fecha_cot(cot_hist_sim_1), filtra_fecha_cot(cot_hist_sim_2)])
+            for k in range(0, len(h_cot)):
+                print(h_cot[k])
         for i in range(0, len(simbolos)):
             ratios.append({'simbolo_1': simbolos[i][0],
                            'simbolo_2': simbolos[i][1],
@@ -153,6 +155,15 @@ def main(page: ft.Page):
                                                                              h_cot[i][1][0:5])),
                            })
         return ratios
+
+    def filtra_fecha_cot(cot_hist: list):
+        fecha = ''
+        cot_hist_fecha_fil = []
+        for j in range(0, len(cot_hist)):
+            if cot_hist[j]['fechaHora'][0:10] != fecha:
+                fecha = cot_hist[j]['fechaHora'][0:10]
+                cot_hist_fecha_fil.append(cot_hist[j])
+        return cot_hist_fecha_fil
 
     def calc_promedio(valores: list):
         suma = 0
