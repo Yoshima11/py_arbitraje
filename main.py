@@ -135,8 +135,6 @@ def main(page: ft.Page):
                                                       fecha_hasta=date.today(),
                                                       ajustada='sinAjustar')
             h_cot.append([filtra_fecha_cot(cot_hist_sim_1), filtra_fecha_cot(cot_hist_sim_2)])
-            for k in range(0, len(h_cot)):
-                print(h_cot[k])
         for i in range(0, len(simbolos)):
             ratios.append({'simbolo_1': simbolos[i][0],
                            'simbolo_2': simbolos[i][1],
