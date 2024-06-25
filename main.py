@@ -128,11 +128,11 @@ def main(page: ft.Page):
         for i in range(0, len(simbolos)):
             h_cot.append([iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][0],
                                                    fecha_desde=date.today() - timedelta(days=365),
-                                                   fecha_hasta=date.today() - timedelta(days=1),
+                                                   fecha_hasta=date.today() - timedelta(days=2),
                                                    ajustada='sinAjustar'),
                           iol.get_historical_price(mercado='bCBA', simbolo=simbolos[i][1],
                                                    fecha_desde=date.today() - timedelta(days=365),
-                                                   fecha_hasta=date.today() - timedelta(days=1),
+                                                   fecha_hasta=date.today() - timedelta(days=2),
                                                    ajustada='sinAjustar'),
                           ])
         for i in range(0, len(simbolos)):
