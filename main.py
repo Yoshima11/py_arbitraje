@@ -109,10 +109,13 @@ def main(page: ft.Page):
             for i in range(0, len(datos)):
                 precio_1 = iol.get_price(simbolo=datos[i]['simbolo_1'], plazo='t1')
                 precio_2 = iol.get_price(simbolo=datos[i]['simbolo_2'], plazo='t1')
-                ratio_actual = float(precio_1['ultimoPrecio']) / float(precio_2['ultimoPrecio'])
+                try:
+                    ratio_actual = float(precio_1['ultimoPrecio']) / float(precio_2['ultimoPrecio'])
+                    datos[i]['ratio_actual'] = ratio_actual
+                except TypeError:
+                    print('NoneType: object is not subscriptable')
                 datos[i]['sim_1'] = precio_1
                 datos[i]['sim_2'] = precio_2
-                datos[i]['ratio_actual'] = ratio_actual
                 print(datos[i])
             page.update(hora_actual)
             agregar_fila(datos)
