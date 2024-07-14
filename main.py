@@ -9,7 +9,7 @@ from iol import ApiIOL
 
 iol = ApiIOL()
 
-simbolos = [
+simbolos_bkp = [
     ['AL30', 'GD30'],
     ['AL35', 'GD35'],
     ['AL30', 'AL35'],
@@ -18,7 +18,11 @@ simbolos = [
     ['DICP', 'DIP0'],
     ['PARP', 'PAP0'],
 ]
-
+simbolos = [
+    ['AL30', 'GD30'],
+    ['AL35', 'GD35'],
+    ['AE38', 'GD38'],
+]
 
 class ratio_indicador(ft.Row):
     def __init__(self,
